@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:water_tracker/screens/SignUp_Screen.dart';
 import 'package:water_tracker/screens/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
@@ -262,65 +261,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     // Units Settings
                     _buildSectionHeader(context, 'App Settings', MdiIcons.cog),
-                    _buildCard(
-                      context,
-                      child: ListTile(
-                        title: const Text(
-                          'Log out',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Are you sure you want to Log out?',
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: _getIconColor(context),
-                        ),
-                        leading: Icon(MdiIcons.logout, color: Colors.redAccent),
-                        onTap: () {
-                          HapticFeedback.heavyImpact();
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  title: const Text('Log out'),
-                                  content: const Text(
-                                    'Are you sure you want to Log out? This action cannot be undone.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(context).pop(),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        // Clear all data
-                                        Navigator.pushAndRemoveUntil(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const SignupScreen(),
-                                          ),
-                                          (route) => false,
-                                        );
-                                      },
-                                      child: const Text(
-                                        'Log out',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                          );
-                        },
-                      ),
-                    ),
+                    
                     // About
                     _buildSectionHeader(context, 'About', MdiIcons.information),
                     _buildCard(

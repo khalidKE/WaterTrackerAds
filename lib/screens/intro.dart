@@ -3,8 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:water_tracker/screens/onboard.dart';
-import 'package:water_tracker/screens/login_screen.dart';
+import 'package:water_tracker/MainScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IntroductionScreen extends StatefulWidget {
@@ -64,7 +63,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         PageRouteBuilder(
           pageBuilder:
               (context, animation, secondaryAnimation) =>
-                  const OnBoardingScreen(),
+                  const MainScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
@@ -89,7 +88,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         context,
         PageRouteBuilder(
           pageBuilder:
-              (context, animation, secondaryAnimation) => const LoginScreen(),
+              (context, animation, secondaryAnimation) => const MainScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
