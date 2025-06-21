@@ -7,8 +7,7 @@ import 'package:water_tracker/screens/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
 import '../providers/water_provider.dart';
-import '../services/notification_service.dart';
-
+import '../services/notification_service.dart';import 'package:url_launcher/url_launcher.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -392,6 +391,16 @@ class SettingsScreen extends StatelessWidget {
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
+  // Method to launch URLs (e.g., mailto links)
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      // Optionally handle error (e.g., show a snackbar)
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -485,12 +494,19 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(fontSize: 16, height: 1.5),
               ),
               const SizedBox(height: 8),
-              SelectableText(
-                '📧 abuelhassan179@gmail.com',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.blueAccent,
-                  fontWeight: FontWeight.w500,
+               InkWell(
+                onTap:
+                    () => _launchURL('mailto:khalidelabd.fcai.usc@gmail.com'),
+                child: const Text(
+                  'Developer',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+              InkWell(
+                onTap: () => _launchURL('mailto:abuelhassan179@gmail.com'),
+                child: const Text(
+                  'Owner',
+                  style: TextStyle(color: Colors.blue),
                 ),
               ),
               const SizedBox(height: 32),
