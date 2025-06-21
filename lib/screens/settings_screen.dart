@@ -341,7 +341,47 @@ class SettingsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    _buildSectionHeader(
+                      context,
+                      'Support & Feedback',
+                      MdiIcons.helpCircle,
+                    ),
+                    _buildCard(
+                      context,
+                      child: Column(
+                        children: [
+                          _buildSettingsItem(
+                            context,
+                            'Rate Our App',
+                            'Enjoying the app? Please rate us!',
+                            MdiIcons.star,
+                            () async {
+                              final Uri url = Uri.parse(
+                                'https://play.google.com/store/apps/details?id=com.daily.water_tracker',
+                              );
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Could not launch Google Play'),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          const Divider(),
+                          _buildSettingsItem(
+                            context,
+                            'Contact Support',
+                            'Have questions? We are here to help.',
+                            MdiIcons.email,
+                            () => _launchEmail(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 80),
                   ]),
                 ),
               ],
@@ -383,6 +423,32 @@ class SettingsScreen extends StatelessWidget {
           child: Material(color: Theme.of(context).cardColor, child: child),
         ),
       ),
+    );
+  }
+
+  Widget _buildSettingsItem(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(subtitle),
+      leading: Icon(
+        icon,
+        color: _getIconColor(context),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: 16,
+        color: _getIconColor(context),
+      ),
+      onTap: onTap,
     );
   }
 }
