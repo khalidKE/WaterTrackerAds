@@ -30,7 +30,8 @@ class NotificationService {
 
       // Android initialization with icon and channel details
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@mipmap/ic_launcher',
+          );
 
       // iOS initialization
       const DarwinInitializationSettings initializationSettingsIOS =
@@ -42,6 +43,7 @@ class NotificationService {
 
       const InitializationSettings initializationSettings =
           InitializationSettings(
+
             android: initializationSettingsAndroid,
             iOS: initializationSettingsIOS,
           );
@@ -81,6 +83,7 @@ class NotificationService {
       'water_tracker_channel',
       'Water Tracker Notifications',
       description: 'Notifications for water tracking reminders',
+      sound:  RawResourceAndroidNotificationSound('water_drop'),
       importance: Importance.high,
       playSound: true,
       enableVibration: true,

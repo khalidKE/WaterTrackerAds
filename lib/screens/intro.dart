@@ -274,22 +274,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
                               SizedBox(height: 15.h),
 
-                              Text(
-                                    widget.skipToLogin
-                                        ? "Tap to Login"
-                                        : "Tap to Start",
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
-                                      fontSize: 14.sp,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  )
-                                  .animate(
-                                    onPlay:
-                                        (controller) =>
-                                            controller.repeat(reverse: true),
-                                  )
-                                  .fadeIn(duration: 1000.ms),
+                           
+                                  
+                                  
                             ],
                           ),
                         ),
