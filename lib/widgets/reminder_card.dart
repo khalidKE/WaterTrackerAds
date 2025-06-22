@@ -105,6 +105,7 @@ class ReminderCard extends StatelessWidget {
                     physics: const BouncingScrollPhysics(),
                     child: Row(
                       children: [
+                        
                         _buildReminderChip(context, 5, 'minutes'),
                         _buildReminderChip(context, 10, 'minutes'),
                         _buildReminderChip(context, 15, 'minutes'),
