@@ -27,10 +27,6 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   late AnimationController _lottieController;
   int _selectedTabIndex = 0;
 
-  // Banner ad variables
-  BannerAd? _bannerAd;
-  bool _isAdLoaded = false;
-
   @override
   void initState() {
     super.initState();
@@ -50,29 +46,6 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-
-    // Initialize and load banner ad
-    _loadBannerAd();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-8639311525630636/3338897592',
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-
-    _bannerAd?.load();
   }
 
   @override
@@ -80,7 +53,6 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     _tabController.dispose();
     _animationController.dispose();
     _lottieController.dispose();
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -91,153 +63,140 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final isLandscape = size.width > size.height;
-
     return Scaffold(
+      backgroundColor: isDarkMode ? colorScheme.background : Colors.blue.shade50,
       body: Column(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors:
-                      isDarkMode
-                          ? [const Color(0xFF1A1F25), const Color(0xFF101418)]
-                          : [const Color(0xFFE6F4FF), const Color(0xFFF5FAFF)],
-                ),
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: isTablet ? 32.0 : 16.0,
+                left: isTablet ? 24.0 : 16.0,
+                right: isTablet ? 24.0 : 16.0,
+                bottom: isTablet ? 0.0 : 0.0,
               ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Custom App Bar with animated water drop
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        isTablet ? 24 : 16,
-                        20,
-                        0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const SizedBox(width: 12),
-                              FadeIn(
-                                controller:
-                                    (controller) => _animationController,
-                                child: Text(
-                                  'Hydration Analytics',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: isTablet ? 28 : 22,
-                                    fontWeight: FontWeight.w700,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Custom App Bar with animated water drop
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      isTablet ? 24 : 16,
+                      20,
+                      0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(width: 12),
+                            FadeIn(
+                              controller:
+                                  (controller) => _animationController,
+                              child: Text(
+                                'Hydration Analytics',
+                                style: GoogleFonts.poppins(
+                                  fontSize: isTablet ? 28 : 22,
+                                  fontWeight: FontWeight.w700,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Custom Tab Bar with responsive sizing
-                    Container(
-                      margin: EdgeInsets.fromLTRB(
-                        20,
-                        isTablet ? 32 : 24,
-                        20,
-                        0,
-                      ),
-                      height: isTablet ? 64 : 56,
-                      decoration: BoxDecoration(
-                        color:
-                            isDarkMode
-                                ? Colors.grey[850]!.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(isTablet ? 32 : 28),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                isDarkMode
-                                    ? Colors.black12
-                                    : Colors.blue.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        labelStyle: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isTablet ? 17 : 15,
-                        ),
-                        unselectedLabelStyle: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w400,
-                          fontSize: isTablet ? 16 : 14,
-                        ),
-                        indicator: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            isTablet ? 32 : 28,
-                          ),
-                          gradient: LinearGradient(
-                            colors: [
-                              colorScheme.primary,
-                              const Color(0xFF5AC8FA),
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        labelColor: Colors.white,
-                        unselectedLabelColor:
-                            isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        padding: EdgeInsets.all(isTablet ? 6 : 4),
-                        tabs: const [
-                          Tab(text: 'Daily'),
-                          Tab(text: 'Week'),
-                          Tab(text: 'Month'),
+                      ],
+                    ),
+                  ),
+
+                  // Custom Tab Bar with responsive sizing
+                  Container(
+                    margin: EdgeInsets.fromLTRB(
+                      20,
+                      isTablet ? 32 : 24,
+                      20,
+                      0,
+                    ),
+                    height: isTablet ? 64 : 56,
+                    decoration: BoxDecoration(
+                      color:
+                          isDarkMode
+                              ? Colors.grey[850]!.withOpacity(0.3)
+                              : Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(isTablet ? 32 : 28),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              isDarkMode
+                                  ? Colors.black12
+                                  : Colors.blue.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      labelStyle: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isTablet ? 17 : 15,
+                      ),
+                      unselectedLabelStyle: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w400,
+                        fontSize: isTablet ? 16 : 14,
+                      ),
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          isTablet ? 32 : 28,
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary,
+                            const Color(0xFF5AC8FA),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor:
+                          isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      padding: EdgeInsets.all(isTablet ? 6 : 4),
+                      tabs: const [
+                        Tab(text: 'Daily'),
+                        Tab(text: 'Week'),
+                        Tab(text: 'Month'),
+                      ],
                     ),
+                  ),
 
-                    // Tab content
-                    Expanded(
-                      child: Consumer<WaterProvider>(
-                        builder: (context, waterProvider, child) {
-                          return TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _buildDailyStatistics(waterProvider),
-                              _buildWeeklyStatistics(waterProvider),
-                              _buildMonthlyStatistics(waterProvider),
-                            ],
-                          );
-                        },
-                      ),
+                  // Tab content
+                  Expanded(
+                    child: Consumer<WaterProvider>(
+                      builder: (context, waterProvider, child) {
+                        return TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildDailyStatistics(waterProvider),
+                            _buildWeeklyStatistics(waterProvider),
+                            _buildMonthlyStatistics(waterProvider),
+                          ],
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-
-          // Banner Ad
-          if (_isAdLoaded && _bannerAd != null)
-            Container(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
-            ),
         ],
       ),
     );

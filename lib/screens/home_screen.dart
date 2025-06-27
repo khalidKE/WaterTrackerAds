@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart'; // Added for AdMob
 import 'package:water_tracker/widgets/notification_center.dart';
+import 'package:water_tracker/services/ad_manager.dart';
 
 import '../models/drink.dart';
 import '../providers/water_provider.dart';
@@ -28,12 +29,6 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey<WaterProgressState> _waterProgressKey =
       GlobalKey<WaterProgressState>();
   final NotificationService _notificationService = NotificationService();
-  BannerAd? _bannerAd; // For banner ad
-  InterstitialAd? _interstitialAd; // For interstitial ad
-  RewardedAd? _rewardedAd; // For rewarded ad
-  bool _isAdLoaded = false; // Track banner ad load status
-  bool _hasShownInterstitial = false; // Track if interstitial ad has been shown
-  bool _hasShownRewarded = false; // Track if rewarded ad has been shown
 
   @override
   void initState() {
@@ -42,118 +37,10 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-
-    // Initialize banner ad
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-8639311525630636/3338897592',
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-
-    // Initialize interstitial ad
-    _loadInterstitialAd();
-
-    // Initialize rewarded ad
-    _loadRewardedAd();
-
-    // Listen for drink additions to trigger water animation
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final waterProvider = Provider.of<WaterProvider>(context, listen: false);
       waterProvider.addListener(_onWaterProviderChanged);
     });
-  }
-
-  void _loadInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: 'ca-app-pub-8639311525630636/7386787962',
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _interstitialAd!.setImmersiveMode(true);
-          _interstitialAd!
-              .fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (InterstitialAd ad) {
-              ad.dispose();
-              _interstitialAd = null;
-              _loadInterstitialAd(); // Preload next interstitial ad
-            },
-            onAdFailedToShowFullScreenContent: (
-              InterstitialAd ad,
-              AdError error,
-            ) {
-              ad.dispose();
-              _interstitialAd = null;
-              _loadInterstitialAd(); // Try loading a new ad
-            },
-          );
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          _interstitialAd = null;
-          // Optionally retry loading after a delay
-        },
-      ),
-    );
-  }
-
-  void _loadRewardedAd() {
-    RewardedAd.load(
-      adUnitId: 'ca-app-pub-8639311525630636/4786651148',
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (RewardedAd ad) {
-          _rewardedAd = ad;
-          _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (RewardedAd ad) {
-              ad.dispose();
-              _rewardedAd = null;
-              _loadRewardedAd(); // Preload next rewarded ad
-            },
-            onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
-              ad.dispose();
-              _rewardedAd = null;
-              _loadRewardedAd(); // Try loading a new ad
-            },
-          );
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          _rewardedAd = null;
-          // Optionally retry loading after a delay
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialAd() {
-    if (_interstitialAd != null && !_hasShownInterstitial) {
-      _interstitialAd!.show();
-      _hasShownInterstitial = true; // Prevent showing interstitial again
-    }
-  }
-
-  void _showRewardedAd() {
-    if (_rewardedAd != null && !_hasShownRewarded) {
-      _rewardedAd!.show(
-        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Earned reward: ${reward.amount} ${reward.type}'),
-            ),
-          );
-        },
-      );
-      _hasShownRewarded = true; // Prevent showing rewarded ad again
-    }
   }
 
   void _onWaterProviderChanged() {
@@ -165,9 +52,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _animationController.dispose();
-    _bannerAd?.dispose(); // Dispose banner ad
-    _interstitialAd?.dispose(); // Dispose interstitial ad
-    _rewardedAd?.dispose(); // Dispose rewarded ad
     super.dispose();
   }
 
@@ -191,14 +75,27 @@ class _HomeScreenState extends State<HomeScreen>
           (context) => DrinksHistoryBottomSheet(
             drinks: drinks,
             onAddDrink: () {
-              _showRewardedAd(); // Trigger rewarded ad before opening dialog
-              showDialog(
-                context: context,
-                builder: (context) => const AddWaterDialog(),
-              );
+              _showAddDrinkDialog();
             },
           ),
     );
+  }
+
+  void _showAddDrinkDialog() {
+    if (AdManager().isRewardedInterstitialLoaded) {
+      AdManager().showRewardedInterstitialAd(context, onRewarded: () {
+        showDialog(
+          context: context,
+          builder: (context) => const AddWaterDialog(),
+        );
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => const AddWaterDialog(),
+      );
+      AdManager().loadRewardedInterstitialAd(() {});
+    }
   }
 
   @override
@@ -518,14 +415,7 @@ class _HomeScreenState extends State<HomeScreen>
                               TextButton.icon(
                                 icon: const Icon(Icons.add, size: 16),
                                 label: const Text('Custom'),
-                                onPressed: () {
-                                  _showRewardedAd(); // Show rewarded ad before opening dialog
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (context) => const AddWaterDialog(),
-                                  );
-                                },
+                                onPressed: _showAddDrinkDialog,
                                 style: TextButton.styleFrom(
                                   foregroundColor:
                                       Theme.of(context).colorScheme.primary,
@@ -610,27 +500,14 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              _showRewardedAd(); // Show rewarded ad before opening dialog
-              showDialog(
-                context: context,
-                builder: (context) => const AddWaterDialog(),
-              );
-            },
+            onPressed: _showAddDrinkDialog,
             icon: const Icon(Icons.add),
             label: const Text('Add Drink'),
             elevation: 4,
           ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
-          bottomNavigationBar:
-              _isAdLoaded && _bannerAd != null
-                  ? Container(
-                    height: _bannerAd!.size.height.toDouble(),
-                    width: _bannerAd!.size.width.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
-                  )
-                  : const SizedBox.shrink(),
+          bottomNavigationBar: const SizedBox.shrink(),
         );
       },
     );
@@ -649,43 +526,84 @@ class _HomeScreenState extends State<HomeScreen>
       padding: const EdgeInsets.only(right: 12.0),
       child: InkWell(
         onTap: () {
-          waterProvider.addDrink(
-            Drink(
-              type: DrinkType.water,
-              amount: amount,
-              timestamp: DateTime.now(),
-            ),
-          );
-          _showInterstitialAd(); // Show interstitial ad after adding drink
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Text('Added $amount ml of water'),
-                ],
+          if (AdManager().isRewardedInterstitialLoaded) {
+            AdManager().showRewardedInterstitialAd(context, onRewarded: () {
+              waterProvider.addDrink(
+                Drink(
+                  type: DrinkType.water,
+                  amount: amount,
+                  timestamp: DateTime.now(),
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Text('Added $amount ml of water'),
+                    ],
+                  ),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  action: SnackBarAction(
+                    label: 'UNDO',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      final drinks = waterProvider.getTodayDrinks();
+                      if (drinks.isNotEmpty) {
+                        waterProvider.removeDrink(
+                          waterProvider.drinks.indexOf(drinks.last),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              );
+            });
+          } else {
+            waterProvider.addDrink(
+              Drink(
+                type: DrinkType.water,
+                amount: amount,
+                timestamp: DateTime.now(),
               ),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Text('Added $amount ml of water'),
+                  ],
+                ),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                action: SnackBarAction(
+                  label: 'UNDO',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    final drinks = waterProvider.getTodayDrinks();
+                    if (drinks.isNotEmpty) {
+                      waterProvider.removeDrink(
+                        waterProvider.drinks.indexOf(drinks.last),
+                      );
+                    }
+                  },
+                ),
               ),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              action: SnackBarAction(
-                label: 'UNDO',
-                textColor: Colors.white,
-                onPressed: () {
-                  final drinks = waterProvider.getTodayDrinks();
-                  if (drinks.isNotEmpty) {
-                    waterProvider.removeDrink(
-                      waterProvider.drinks.indexOf(drinks.last),
-                    );
-                  }
-                },
-              ),
-            ),
-          );
+            );
+            AdManager().loadRewardedInterstitialAd(() {});
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -741,8 +659,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-
-
 
   Widget _buildStatItem(
     BuildContext context,

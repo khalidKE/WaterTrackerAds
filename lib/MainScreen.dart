@@ -6,6 +6,7 @@ import 'package:water_tracker/screens/home_screen.dart';
 import 'package:water_tracker/screens/profile_screen.dart';
 import 'package:water_tracker/screens/settings_screen.dart';
 import 'package:water_tracker/screens/statistics_screen.dart';
+import 'package:water_tracker/services/ad_manager.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +17,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  BannerAd? _bannerAd;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -28,28 +28,20 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _createBannerAd();
-  }
-
-  void _createBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-8639311525630636/3338897592', 
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          setState(() {});
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          ad.dispose();
-        },
-      ),
-    )..load();
+    AdManager().loadBannerAd(() {
+      setState(() {});
+    });
+    AdManager().loadRewardedInterstitialAd(() {
+      setState(() {});
+    });
+    AdManager().loadNativeAd(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
+    AdManager().disposeAds();
     super.dispose();
   }
 
@@ -61,12 +53,12 @@ class _MainScreenState extends State<MainScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Are you sure you want to exit?'),
-                if (_bannerAd != null)
+                const Text('Are you sure you want to exit the app?'),
+                const SizedBox(height: 12),
+                if (AdManager().nativeAd != null && AdManager().isNativeLoaded)
                   SizedBox(
-                    width: AdSize.banner.width.toDouble(),
-                    height: AdSize.banner.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
+                    height: 100,
+                    child: AdWidget(ad: AdManager().nativeAd!),
                   ),
               ],
             ),
@@ -88,44 +80,57 @@ class _MainScreenState extends State<MainScreen> {
         false;
   }
 
+  void _onTabChange(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         body: _screens[_selectedIndex],
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          elevation: 0,
-          backgroundColor:
-              Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).scaffoldBackgroundColor
-                  : Colors.white,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.water_drop_outlined),
-              selectedIcon: Icon(Icons.water_drop),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              selectedIcon: Icon(Icons.bar_chart),
-              label: 'Statistics',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings',
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (AdManager().bannerAd != null && AdManager().isBannerLoaded)
+              SizedBox(
+                width: AdSize.banner.width.toDouble(),
+                height: AdSize.banner.height.toDouble(),
+                child: AdWidget(ad: AdManager().bannerAd!),
+              ),
+            NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: _onTabChange,
+              elevation: 0,
+              backgroundColor:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).scaffoldBackgroundColor
+                      : Colors.white,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.water_drop_outlined),
+                  selectedIcon: Icon(Icons.water_drop),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  selectedIcon: Icon(Icons.bar_chart),
+                  label: 'Statistics',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings),
+                  label: 'Settings',
+                ),
+              ],
             ),
           ],
         ),
